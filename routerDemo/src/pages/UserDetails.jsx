@@ -8,6 +8,7 @@ function UserDetails() {
 
    if (!/^\d+$/.test(id)) {
     return <NotfoundError />;  // OR Navigate("/404")
+
   }
 
   return (
