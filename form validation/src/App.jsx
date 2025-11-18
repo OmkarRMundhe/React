@@ -20,6 +20,11 @@ function App() {
 
   // checkbox state
   const [skills, setSkills] = useState([]);
+  const [skillsErrorMessage, setSkillsErrorMessage] = useState("");
+
+  // date of birth + error
+  const [dob, setDob] = useState("");
+  const [dobErrorMessage, setDobErrorMessage] = useState("");
 
   // final submitted form data
   const [submittedFormData, setSubmittedFormData] = useState(null);
@@ -64,6 +69,19 @@ function App() {
     return "";
   }
 
+  // validate date of birth
+  function getDobError(value) {
+    if (!value) return "Please select your date of birth.";
+
+    const selectedDate = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate > today) return "Date of birth cannot be in the future.";
+
+    return "";
+  }
+
   // BLUR HANDLERS
   function handleNameBlur() {
     setNameErrorMessage(getNameError(name));
@@ -82,6 +100,16 @@ function App() {
     setGenderErrorMessage(getGenderError(gender));
   }
 
+  function handleDobBlur() {
+    setDobErrorMessage(getDobError(dob));
+  }
+
+  // validate skills
+  function getSkillsError(skillsArray) {
+    if (skillsArray.length === 0) return "Please select at least one skill.";
+    return "";
+  }
+
   // SUBMIT HANDLER
   function handleSubmit(e) {
     e.preventDefault();
@@ -91,15 +119,27 @@ function App() {
     const countryError = getCountryError(country);
     const passwordError = getPasswordError(password);
     const radioError = getGenderError(gender);
+    const skillsError = getSkillsError(skills);
+    const dobError = getDobError(dob);
 
     // Update errors
     setNameErrorMessage(nameError);
     setCountryErrorMessage(countryError);
     setPasswordErrorMessage(passwordError);
     setGenderErrorMessage(radioError);
+    setSkillsErrorMessage(skillsError);
+    setDobErrorMessage(dobError);
 
     // If ANY error exists → stop submission
-    if (nameError || countryError || passwordError || radioError) return;
+    if (
+      nameError ||
+      countryError ||
+      passwordError ||
+      radioError ||
+      skillsError ||
+      dobError
+    )
+      return;
 
     // Save submitted form
     setSubmittedFormData({
@@ -108,6 +148,7 @@ function App() {
       passwordMask: "*".repeat(password.length),
       gender,
       skills,
+      dob,
     });
 
     // Clear form
@@ -116,6 +157,7 @@ function App() {
     setPassword("");
     setGender("");
     setSkills([]);
+    setDob("");
   }
 
   return (
@@ -184,7 +226,6 @@ function App() {
           <p className="error-text">{passwordErrorMessage}</p>
         )}
 
-        {/* Radio buttons */}
         {/* Radio buttons */}
         <div style={{ marginTop: "15px" }}>
           <label>
@@ -291,6 +332,31 @@ function App() {
           }}
         />
         <label htmlFor="C++">C++</label>
+        {skillsErrorMessage && (
+          <p className="error-text">{skillsErrorMessage}</p>
+        )}
+
+        {/* date of birth */}
+        <label
+          htmlFor="dob"
+          style={{ display: "block", marginTop: "15px", marginBottom: "5px" }}
+        >
+          Date of Birth
+        </label>
+
+        <input
+          type="date"
+          id="dob"
+          value={dob}
+          onChange={(e) => {
+            setDob(e.target.value);
+            if (dobErrorMessage) setDobErrorMessage("");
+          }}
+          onBlur={handleDobBlur}
+          className={`input-field ${dobErrorMessage ? "input-error" : ""}`}
+        />
+
+        {dobErrorMessage && <p className="error-text">{dobErrorMessage}</p>}
 
         {/* SUBMIT BUTTON */}
         <button type="submit" className="submit-btn">
@@ -315,6 +381,10 @@ function App() {
             </p>
             <p>
               <b>Skills:</b> {submittedFormData.skills.join(", ")}
+            </p>
+
+            <p>
+              <b>Date of Birth:</b> {submittedFormData.dob}
             </p>
           </div>
         )}
