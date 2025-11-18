@@ -2,66 +2,120 @@ import { useState } from "react";
 import "./App.css";
 
 function App() {
-  // name state + error
+  // name state + error message
   const [name, setName] = useState("");
-  const [nameError, setNameError] = useState("");
+  const [nameErrorMessage, setNameErrorMessage] = useState("");
 
-  // dropdown state + error
+  // country dropdown + error message
   const [country, setCountry] = useState("");
-  const [countryError, setCountryError] = useState("");
+  const [countryErrorMessage, setCountryErrorMessage] = useState("");
 
-  // final submitted data
-  const [submittedData, setSubmittedData] = useState(null);
+  // password + error message
+  const [password, setPassword] = useState("");
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+
+  // radio button state
+  const [gender, setGender] = useState("");
+  const [genderErrorMessage, setGenderErrorMessage] = useState("");
+
+  // checkbox state
+  const [skills, setSkills] = useState([]);
+
+  // final submitted form data
+  const [submittedFormData, setSubmittedFormData] = useState(null);
 
   // VALIDATE NAME
   function getNameError(value) {
     const trimmed = value.trim();
 
-    if (trimmed.length === 0) return "Name is required";
-    if (trimmed.length < 3) return "Name must be at least 3 characters";
-    if (trimmed.length > 15) return "Name cannot exceed 15 characters";
+    if (trimmed.length === 0) return "Name is required.";
+    if (trimmed.length < 3) return "Name must be at least 3 characters.";
+    if (trimmed.length > 15) return "Name cannot exceed 15 characters.";
 
     return "";
   }
 
-  // VALIDATE DROPDOWN
-  function validateDropdown() {
-    if (country === "") return "Please select a country";
+  // VALIDATE COUNTRY
+  function getCountryError(value) {
+    if (value === "") return "Please select a country.";
     return "";
   }
 
-  // onBlur for name
+  // VALIDATE PASSWORD
+  function getPasswordError(value) {
+    if (value === "") return "Password is required.";
+    if (value.length < 6) return "Password must be at least 6 characters.";
+    if (value.length > 20) return "Password cannot exceed 20 characters.";
+    if (!/[A-Z]/.test(value))
+      return "Password must contain at least one uppercase letter.";
+    if (!/[a-z]/.test(value))
+      return "Password must contain at least one lowercase letter.";
+    if (!/[0-9]/.test(value))
+      return "Password must contain at least one digit.";
+    if (!/[!@#$%^&*]/.test(value))
+      return "Password must contain at least one special character (!@#$%^&*).";
+
+    return "";
+  }
+
+  // validate radio button
+  function getGenderError(value) {
+    if (value === "") return "Please select a gender.";
+    return "";
+  }
+
+  // BLUR HANDLERS
   function handleNameBlur() {
-    setNameError(getNameError(name));
+    setNameErrorMessage(getNameError(name));
   }
 
-  // onBlur for dropdown
-  function handleDropdownBlur() {
-    setCountryError(validateDropdown());
+  function handleCountryBlur() {
+    setCountryErrorMessage(getCountryError(country));
+  }
+
+  function handlePasswordBlur() {
+    setPasswordErrorMessage(getPasswordError(password));
+  }
+
+  function handleGenderBlur() {
+    // This can be used if you want to show error on blur for radio buttons
+    setGenderErrorMessage(getGenderError(gender));
   }
 
   // SUBMIT HANDLER
   function handleSubmit(e) {
     e.preventDefault();
+    console.log(skills);
+    // Validate everything
+    const nameError = getNameError(name);
+    const countryError = getCountryError(country);
+    const passwordError = getPasswordError(password);
+    const radioError = getGenderError(gender);
 
-    const nameValidation = getNameError(name);
-    const countryValidation = validateDropdown();
+    // Update errors
+    setNameErrorMessage(nameError);
+    setCountryErrorMessage(countryError);
+    setPasswordErrorMessage(passwordError);
+    setGenderErrorMessage(radioError);
 
-    // handle both validations
-    setNameError(nameValidation);
-    setCountryError(countryValidation);
+    // If ANY error exists → stop submission
+    if (nameError || countryError || passwordError || radioError) return;
 
-    if (nameValidation || countryValidation) return;
-
-    // save submitted data
-    setSubmittedData({
+    // Save submitted form
+    setSubmittedFormData({
       name: name.trim(),
-      country: country,
+      country,
+      passwordMask: "*".repeat(password.length),
+      gender,
+      skills,
     });
 
-    // clear form
+    // Clear form
     setName("");
     setCountry("");
+    setPassword("");
+    setGender("");
+    setSkills([]);
   }
 
   return (
@@ -69,7 +123,7 @@ function App() {
       <form className="form-card" onSubmit={handleSubmit}>
         <h2 className="form-title">User Form</h2>
 
-        {/* NAME INPUT */}
+        {/* NAME */}
         <label style={{ fontWeight: "bold" }}>Full Name</label>
         <input
           type="text"
@@ -77,29 +131,27 @@ function App() {
           placeholder="Enter your name"
           onChange={(e) => {
             setName(e.target.value);
-            if (nameError) setNameError("");
+            if (nameErrorMessage) setNameErrorMessage("");
           }}
           onBlur={handleNameBlur}
-          className={`input-field ${nameError ? "input-error" : ""}`}
+          className={`input-field ${nameErrorMessage ? "input-error" : ""}`}
         />
+        {nameErrorMessage && <p className="error-text">{nameErrorMessage}</p>}
 
-        {nameError && <p className="error-text">{nameError}</p>}
-
-        {/* DROPDOWN */}
+        {/* COUNTRY */}
         <label
           style={{ fontWeight: "bold", marginTop: "15px", display: "block" }}
         >
           Country
         </label>
-
         <select
           value={country}
           onChange={(e) => {
             setCountry(e.target.value);
-            if (countryError) setCountryError("");
+            if (countryErrorMessage) setCountryErrorMessage("");
           }}
-          onBlur={handleDropdownBlur}
-          className={`input-field ${countryError ? "input-error" : ""}`}
+          onBlur={handleCountryBlur}
+          className={`input-field ${countryErrorMessage ? "input-error" : ""}`}
         >
           <option value="">Select a country</option>
           <option value="India">India</option>
@@ -107,8 +159,138 @@ function App() {
           <option value="UK">UK</option>
           <option value="Canada">Canada</option>
         </select>
+        {countryErrorMessage && (
+          <p className="error-text">{countryErrorMessage}</p>
+        )}
 
-        {countryError && <p className="error-text">{countryError}</p>}
+        {/* PASSWORD */}
+        <label
+          style={{ fontWeight: "bold", marginTop: "15px", display: "block" }}
+        >
+          Password
+        </label>
+        <input
+          type="password"
+          value={password}
+          placeholder="Enter a strong password"
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (passwordErrorMessage) setPasswordErrorMessage("");
+          }}
+          onBlur={handlePasswordBlur}
+          className={`input-field ${passwordErrorMessage ? "input-error" : ""}`}
+        />
+        {passwordErrorMessage && (
+          <p className="error-text">{passwordErrorMessage}</p>
+        )}
+
+        {/* Radio buttons */}
+        {/* Radio buttons */}
+        <div style={{ marginTop: "15px" }}>
+          <label>
+            <input
+              type="radio"
+              name="gender"
+              value="Male"
+              checked={gender === "Male"}
+              onChange={(e) => {
+                setGender(e.target.value);
+                if (genderErrorMessage) setGenderErrorMessage("");
+              }}
+            />
+            Male
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="gender"
+              value="Female"
+              checked={gender === "Female"}
+              onChange={(e) => {
+                setGender(e.target.value);
+                if (genderErrorMessage) setGenderErrorMessage("");
+              }}
+            />
+            Female
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="gender"
+              value="Other"
+              checked={gender === "Other"}
+              onChange={(e) => {
+                setGender(e.target.value);
+                if (genderErrorMessage) setGenderErrorMessage("");
+              }}
+            />
+            Other
+          </label>
+        </div>
+
+        {genderErrorMessage && (
+          <p className="error-text">{genderErrorMessage}</p>
+        )}
+
+        {/* Checkboxes */}
+        <label
+          style={{ display: "block", marginBottom: "5px", marginTop: "15px" }}
+        >
+          Skills
+        </label>
+
+        <input
+          type="checkbox"
+          id="Java"
+          name="skills"
+          value="Java"
+          checked={skills.includes("Java")}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (e.target.checked) {
+              setSkills([...skills, value]);
+            } else {
+              setSkills(skills.filter((skill) => skill !== value));
+            }
+          }}
+        />
+        <label htmlFor="Java">Java</label>
+
+        <input
+          type="checkbox"
+          id="JS"
+          name="skills"
+          value="JS"
+          checked={skills.includes("JS")}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (e.target.checked) {
+              setSkills([...skills, value]);
+            } else {
+              setSkills(skills.filter((skill) => skill !== value));
+            }
+          }}
+        />
+        <label htmlFor="JS">JS</label>
+
+        <input
+          type="checkbox"
+          id="C++"
+          name="skills"
+          value="C++"
+          checked={skills.includes("C++")}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (e.target.checked) {
+              setSkills([...skills, value]);
+            } else {
+              setSkills(skills.filter((skill) => skill !== value));
+            }
+          }}
+        />
+        <label htmlFor="C++">C++</label>
 
         {/* SUBMIT BUTTON */}
         <button type="submit" className="submit-btn">
@@ -116,14 +298,23 @@ function App() {
         </button>
 
         {/* SUBMITTED DATA */}
-        {submittedData && (
+        {submittedFormData && (
           <div className="submitted-section">
             <h3>Submitted Details:</h3>
             <p>
-              <b>Name:</b> {submittedData.name}
+              <b>Name:</b> {submittedFormData.name}
             </p>
             <p>
-              <b>Country:</b> {submittedData.country}
+              <b>Country:</b> {submittedFormData.country}
+            </p>
+            <p>
+              <b>Password:</b> {submittedFormData.passwordMask}
+            </p>
+            <p>
+              <b>Gender:</b> {submittedFormData.gender}
+            </p>
+            <p>
+              <b>Skills:</b> {submittedFormData.skills.join(", ")}
             </p>
           </div>
         )}
